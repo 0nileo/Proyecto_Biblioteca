@@ -216,7 +216,7 @@ class SolicitarReservaTests(TestCase):
         stock_antes = self.libro1.cantidad_disponible
         stock_ejemplares = self.libro1.cantidad_ejemplares
 
-        with self.assertRaisesMessage(ValueError, f"No se puede cancelar una reserva en estado: retirada"):
+        with self.assertRaisesMessage(ValueError, f"No se puede retirar una reserva en estado: retirada"):
             reserva.retirar()
 
         reserva.refresh_from_db()

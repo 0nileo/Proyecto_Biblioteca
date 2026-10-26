@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from biblioteca_app.models import Libro, Socio, Reserva
-
+from biblioteca_app import services
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 class Command(BaseCommand):
 
@@ -12,7 +14,13 @@ class Command(BaseCommand):
             print("1. Registrar libro")
             print("2. Registrar socio")
             print("3. Solicitar reserva")
-            print("4. Salir")
+            print("4. Cancelar reserva")
+            print("5. Retirar libro reservado")
+            print("6. Devolver libro")
+            print("7. Listar libros")
+            print("8. Listar Socios")
+            print("9. Listar Reservas")
+            print("10. Salir")
 
             opcion = input("\nSeleccione una opción: ")
 
@@ -24,25 +32,118 @@ class Command(BaseCommand):
                         isbn = input("Ingrese el ISBN del libro: ")
                         anio = int(input("Ingrese el año de publicacion: "))
                         ejemplares = int(input("Ingrese la cantidad de ejemplares que tiene: "))
+                        libro = services.registrar_libro(titulo, autor, isbn, anio, ejemplares)
+                        print(f"Libro '{libro.titulo}' registrado correctamente.")
 
-                        Libro.objects.create(
-                        titulo = titulo ,
-                        autor = autor ,
-                        isbn = isbn ,
-                        anio_publicacion = anio ,
-                        cantidad_ejemplares = ejemplares ,
-                        cantidad_disponible = ejemplares
-                        )
-                        print("Libro creado exitosamente!.")
+                    except ValidationError as error:
+                        print(f"Error de validación: {error}")
 
-                    except ValueError:
-                        print("Se ingresó un número inválido.")
+                    except IntegrityError:
+                        print("No se pudo registrar el libro. Verificá que el ISBN no esté repetido.")
+
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
 
                 case "2":
-                    print("Registrar socio")
+                    try:
+                        numero = input("Ingrese el numero de socio a crear: ")
+                        nombre = input("Ingrese nombre del titular: ")
+                        apellido = input("Ingrese el apellido del titular: ")
+                        dni = input("Ingrese el numero de DNI del titular: ")
+                        email = input("Ingrese el correo electronico del titular: ")
+                        socio = services.registrar_socio(numero, nombre, apellido, dni, email)
+                        print(f"Socio numero: {socio.numero_socio} fue creado exitosamente.")
+
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
+                    except IntegrityError:
+                        print("No se pudo registrar al socio. Verificár que el numero de socio o DNI no esté repetido.")
+
+                        
                 case "3":
-                    print("Solicitar reserva")
+                    try:
+                        print("Ingrese a continuación...")
+                        num_socio = input("El numero de socio: ")
+                        num_libro = input("El ISBN del libro a reservar: ")
+                        socio, libro = services.registrar_reserva(num_socio, num_libro)
+                        print(f"Se ha realizado la reserva exitosamente: {socio.nombre} reservó {libro.titulo}")
+
+                    except Socio.DoesNotExist:
+                        print("El número de socio ingresado no existe.")
+
+                    except Libro.DoesNotExist:
+                        print("El ISBN ingresado no corresponde a ningún libro.")
+                        
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
                 case "4":
+                    try:
+                        id_reserva = input("Ingrese el numero de reserva a cancelar: ")
+                        reserva = services.cancelar_reserva(id_reserva)
+                        print(f"Se ha cancelado la reserva exitosamente: {reserva.libro.titulo} a nombre de {reserva.socio.nombre} {reserva.socio.apellido}")
+
+                    except Reserva.DoesNotExist:
+                        print("No se ha encontrado una reserva bajo el numero brindado")
+
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
+                case "5":
+                    try:
+                        id_reserva = input("Ingrese el numero de reserva a retirar: ")
+                        reserva = services.retirar_reserva(id_reserva)
+                        print(f"Se ha realizado el retiro de la reserva exitosamente: {reserva.socio.nombre} {reserva.socio.apellido} ha retirado {reserva.libro.titulo}")
+
+                    except Reserva.DoesNotExist:
+                        print("No se ha encontrado una reserva bajo el numero brindado")
+
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
+                case "6":
+                    try:
+                        id_reserva = input("Ingrese el numero de reserva a devolver: ")
+                        reserva = services.devolver_reserva(id_reserva)
+                        print(f"Se ha realizado la devolución de la reserva exitosamente: {reserva.socio.nombre} {reserva.socio.apellido} ha devuelto {reserva.libro.titulo}")
+
+                    except Reserva.DoesNotExist:
+                        print("No se ha encontrado una reserva bajo el numero brindado")
+
+                    except ValueError as error:
+                        print(f"Error: {error}")
+
+                case "7":
+                    libros = services.listar_libros()
+                    if not libros:
+                        print("No se han encontrado libros para listar")
+                    else:
+                        print("\n===== LISTADO DE LIBROS =====")
+                        for item in libros:
+                            print(item)
+                            print("-----------------------")
+                case "8":
+                    socios = services.listar_socios()
+                    if not socios:
+                        print("No se han encontrado socios para listar")
+                    else:
+                        print("\n===== LISTADO DE SOCIOS =====")
+                        for item in socios:
+                            print(item)
+                            print("-----------------------")
+                case "9":
+                    reservas = services.listar_reservas()
+                    if not reservas:
+                        print("No se han encontrado reservas para listar")
+                    else:
+                        print("\n===== LISTADO DE RESERVAS =====")
+                        for item in reservas:
+                            print(item)
+                            print("-----------------------")
+                    
+                case "10":
                     print("Saliendo del sistema...")
                     break
                 case _:

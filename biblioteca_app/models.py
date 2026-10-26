@@ -3,12 +3,20 @@ from django.utils import timezone
 from django.db import transaction
 
 class Libro(models.Model):
-    titulo = models.CharField(max_length=200)
-    autor = models.CharField(max_length=150)
-    isbn = models.CharField(max_length=13, unique=True)
-    anio_publicacion = models.IntegerField()
+    titulo = models.CharField(max_length=200, error_messages={"blank": "El título del libro no puede estar vacio."})
+    autor = models.CharField(max_length=150, error_messages={"blank": "El autor del libro no puede estar vacio."})
+    isbn = models.CharField(max_length=13, unique=True, error_messages={
+                                "blank": "El ISBN no puede estar vacio.",
+                                "unique": "Se ha encontrado otro libro registrado bajo el mismo ISBN."
+                                                                        })
+    anio_publicacion = models.IntegerField(error_messages={
+                                "blank": "El año de publicación no puede estar vacio.",
+                                })
     cantidad_disponible = models.IntegerField()
-    cantidad_ejemplares = models.IntegerField()
+    cantidad_ejemplares = models.IntegerField(error_messages={
+                                "blank": "El campo cantidad de ejemplares no puede estar vacio ",
+                                "invalid": "El campo cantidad de ejemplares solo pueden ser numeros."
+                                })
 
     class Meta:
         constraints = [
@@ -24,42 +32,48 @@ class Libro(models.Model):
     
     def __str__(self):
         return f"""
-Libro:{self.titulo}
-Autor:{self.autor}
+Libro: {self.titulo}
+Autor: {self.autor}
 ISBN: {self.isbn}
-Año de publicacion:{self.anio_publicacion}
-Ejemplares disponibles:{self.cantidad_disponible}
+Año de publicacion: {self.anio_publicacion}
+Ejemplares disponibles: {self.cantidad_disponible}/{self.cantidad_ejemplares}
 """
 
 
 class Socio(models.Model):
-    numero_socio = models.CharField(max_length=10, unique=True)
-    nombre = models.CharField(max_length=50)
-    apellido = models.CharField(max_length=70)
-    dni = models.CharField(max_length=10, unique=True)
-    email = models.EmailField(max_length=254)
+    numero_socio = models.CharField(max_length=10, unique=True, error_messages={
+                                "blank": "El numero de socio es un campo obligatorio.",
+                                "unique": "Ya existe un socio registrado con el mismo numero de socio."                               
+                                })
+    nombre = models.CharField(max_length=50, error_messages={"blank": "El nombre del socio no puede estar vacio."})
+    apellido = models.CharField(max_length=70, error_messages={"blank": "El apellido del socio no puede estar vacio."})
+    dni = models.CharField(max_length=10, unique=True, error_messages={
+                                "blank": "El DNI del socio no puede estar vacio.",
+                                "unique": "Ya existe un socio registrado con el mismo numero de DNI."
+                                })
+    email = models.EmailField(max_length=254, error_messages={
+                                "blank": "El campo email no puede estar vacio",
+                                "invalid": "El email ingresado no es un formato de email valido."
+                                })
     estado = models.CharField(choices= [('activo', 'Activo'),
                                          ('inactivo', 'Inactivo')],
                                            default='activo', max_length=10)
 
     def __str__(self):
-        return f"{self.nombre} {self.apellido}, socio numero:{self.numero_socio}."
+        return f"""{self.nombre} {self.apellido} socio numero:{self.numero_socio}.
+DNI: {self.dni}, Email: {self.email}, Estado: {self.estado}"""
+
 
     def solicitar_reserva(self, libro):
-        #Si self.estado es "inactivo", el método solicitar_reserva(libro) debe lanzar un ValueError".
         if self.estado == 'inactivo':
             raise ValueError("El socio está inactivo")
 
-        #si libro.cantidad_disponible es igual a cero debe lanzar el ValueError esperado.
         if libro.cantidad_disponible <= 0:
             raise ValueError("No hay ejemplares disponibles")
 
-        #si el socio ya tiene una reserva del mismo libro en estado "pendiente" o "retirada" lanza el ValueError esperado.
-        #self.reservas - .filter() - .exists()
         if self.reservas.filter(libro=libro, estado_reserva__in=["pendiente", "retirada"]).exists():
             raise ValueError("El socio ya tiene una reserva activa para este libro")
 
-        #caso exitoso de crear una reserva
         with transaction.atomic():
             Reserva.objects.create(socio = self, libro = libro)
             libro.cantidad_disponible -= 1
@@ -83,11 +97,11 @@ class Reserva(models.Model):
 
     def __str__(self):
         return f"""
-Reserva a nombre de:
-Socio:{self.socio}
-{self.libro}
-Estado reserva:{self.estado_reserva}
+Reserva ID: {self.id} 
+A nombre de: {self.socio.nombre} {self.socio.apellido}
+Libro: {self.libro.titulo}
 Fecha de reserva:{self.fecha_reserva}
+Estado de reserva:{self.estado_reserva}
 """
 
     def cancelar(self):
@@ -102,7 +116,7 @@ Fecha de reserva:{self.fecha_reserva}
 
     def retirar(self):
         if self.estado_reserva != 'pendiente':
-            raise ValueError(f"No se puede cancelar una reserva en estado: {self.estado_reserva}")
+            raise ValueError(f"No se puede retirar una reserva en estado: {self.estado_reserva}")
 
         self.estado_reserva = 'retirada'
         self.save(update_fields=["estado_reserva"])
