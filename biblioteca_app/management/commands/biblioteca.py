@@ -11,21 +11,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         while True:
             print("\n===== BIBLIOTECA =====\n")
-            print("1. Registrar libro")
-            print("2. Registrar socio")
-            print("3. Solicitar reserva")
-            print("4. Cancelar reserva")
-            print("5. Retirar libro reservado")
-            print("6. Devolver libro")
-            print("7. Listar libros")
-            print("8. Listar Socios")
-            print("9. Listar Reservas")
-            print("10. Salir")
+            print("1. Buscar Libro")
+            print("2. Registrar libro")
+            print("3. Registrar socio")
+            print("4. Solicitar reserva")
+            print("5. Cancelar reserva")
+            print("6. Retirar libro reservado")
+            print("7. Devolver libro")
+            print("8. Listar libros")
+            print("9. Listar Socios")
+            print("10. Listar Reservas")
+            print("11. Salir")
 
             opcion = input("\nSeleccione una opción: ")
 
             match opcion:
                 case "1":
+                    self.menu_buscar_libro()
+
+                case "2":
                     try:
                         titulo = input("Ingrese el titulo del libro: ")
                         autor = input("Ingrese el autor del libro: ")
@@ -44,8 +48,7 @@ class Command(BaseCommand):
                     except ValueError as error:
                         print(f"Error: {error}")
 
-
-                case "2":
+                case "3":
                     try:
                         numero = input("Ingrese el numero de socio a crear: ")
                         nombre = input("Ingrese nombre del titular: ")
@@ -60,9 +63,8 @@ class Command(BaseCommand):
 
                     except IntegrityError:
                         print("No se pudo registrar al socio. Verificár que el numero de socio o DNI no esté repetido.")
-
-                        
-                case "3":
+                      
+                case "4":
                     try:
                         print("Ingrese a continuación...")
                         num_socio = input("El numero de socio: ")
@@ -79,7 +81,7 @@ class Command(BaseCommand):
                     except ValueError as error:
                         print(f"Error: {error}")
 
-                case "4":
+                case "5":
                     try:
                         id_reserva = input("Ingrese el numero de reserva a cancelar: ")
                         reserva = services.cancelar_reserva(id_reserva)
@@ -91,7 +93,7 @@ class Command(BaseCommand):
                     except ValueError as error:
                         print(f"Error: {error}")
 
-                case "5":
+                case "6":
                     try:
                         id_reserva = input("Ingrese el numero de reserva a retirar: ")
                         reserva = services.retirar_reserva(id_reserva)
@@ -103,7 +105,7 @@ class Command(BaseCommand):
                     except ValueError as error:
                         print(f"Error: {error}")
 
-                case "6":
+                case "7":
                     try:
                         id_reserva = input("Ingrese el numero de reserva a devolver: ")
                         reserva = services.devolver_reserva(id_reserva)
@@ -115,7 +117,7 @@ class Command(BaseCommand):
                     except ValueError as error:
                         print(f"Error: {error}")
 
-                case "7":
+                case "8":
                     libros = services.listar_libros()
                     if not libros:
                         print("No se han encontrado libros para listar")
@@ -124,7 +126,7 @@ class Command(BaseCommand):
                         for item in libros:
                             print(item)
                             print("-----------------------")
-                case "8":
+                case "9":
                     socios = services.listar_socios()
                     if not socios:
                         print("No se han encontrado socios para listar")
@@ -133,7 +135,7 @@ class Command(BaseCommand):
                         for item in socios:
                             print(item)
                             print("-----------------------")
-                case "9":
+                case "10":
                     reservas = services.listar_reservas()
                     if not reservas:
                         print("No se han encontrado reservas para listar")
@@ -143,8 +145,52 @@ class Command(BaseCommand):
                             print(item)
                             print("-----------------------")
                     
-                case "10":
+                case "11":
                     print("Saliendo del sistema...")
                     break
                 case _:
                     print("Opción inválida. Intente nuevamente.")
+
+    def menu_buscar_libro(self):
+        while True:
+            print("\n===== BUSCAR LIBROS =====")
+            print("1. Buscar por ISBN")
+            print("2. Buscar por título")
+            print("3. Buscar por autor")
+            print("4. Volver al menú principal")
+
+            opcion = input("\nSeleccione una opción: ")
+
+            match opcion:
+                case "1":
+                    try:
+                        isbn = input("Ingrese el ISBN del libro que quiera buscar: ")
+                        print(f"{services.buscar_libro_por_isbn(isbn)}")
+                    except Libro.DoesNotExist:
+                        print("No se ha encontrado un libro bajo el ISBN brindado.")
+                case "2":
+                    titulo = input("Ingrese el titulo del libro que quiera buscar: ")
+                    libros = services.buscar_libro_por_titulo(titulo)
+
+                    if not libros:
+                            print("No se encontraron libros con ese título.")
+                    else:
+                        for libro in libros:
+                            print(libro)
+                            print("-----------------------")
+                case "3":
+                    autor = input("Ingrese el autor del libro que quiera buscar: ")
+                    libros = services.buscar_libro_por_autor(autor)
+                    if not libros:
+                        print("No se encontraron libros con ese autor.")
+                    else:
+                        for libro in libros:
+                            print(libro)
+                            print("-----------------------")
+                case "4":
+                    print("Regresando al menu principal...")
+                    break
+
+
+
+

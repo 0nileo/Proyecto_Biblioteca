@@ -1,16 +1,6 @@
 from .models import Libro, Socio, Reserva
 
 def registrar_libro(titulo, autor, isbn, anio, ejemplares):
-    #if not atributo.strip() verifica si ese campo esta vacio
-#   if not titulo.strip():
-#       raise ValueError("El título no puede estar vacío")
-#   if not autor.strip():
-#       raise ValueError("El autor no puede estar vacío")
-    #mismo que if not .strip() pero para digitos
-#   if not isbn.isdigit():
-#       raise ValueError("El ISBN no puede estar vaacio y solo puede contener numeros")
-#   if len(isbn) not in (10, 13):
-#       raise ValueError("El ISBN debe tener 10 o 13 dígitos.")
     if anio <= 0:
         raise ValueError("El año de publicacion del libro no puede ser menor a 0")
     if ejemplares < 0:
@@ -72,3 +62,12 @@ def listar_socios():
 
 def listar_reservas():
     return Reserva.objects.all()
+
+def buscar_libro_por_isbn(isbn):
+    return Libro.objects.get(isbn=isbn)
+
+def buscar_libro_por_titulo(titulo):
+    return Libro.objects.filter(titulo__icontains=titulo)
+
+def buscar_libro_por_autor(autor):
+    return Libro.objects.filter(autor__icontains=autor)
