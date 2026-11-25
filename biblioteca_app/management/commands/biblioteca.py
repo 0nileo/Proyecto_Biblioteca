@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         # while True mantiene el menú funcionando hasta que
         # el usuario elija salir mediante break.
-        while True:
+        
             print("\n===== BIBLIOTECA =====\n")
             print("1. Administrar Libros")
             print("2. Administrar Socios")
@@ -38,7 +38,7 @@ class Command(BaseCommand):
             opcion = input("\nSeleccione una opción: ")
 
             # match/case permite ejecutar distintas instrucciones
-            # según la opción seleccionada por el usuario.
+            # según la opción seleccionadawhile True: por el usuario.
             match opcion:
                 case "1":
                     self.menu_libros()
