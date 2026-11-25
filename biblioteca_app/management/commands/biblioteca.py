@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         # while True mantiene el menú funcionando hasta que
         # el usuario elija salir mediante break.
-        
+        while True:
             print("\n===== BIBLIOTECA =====\n")
             print("1. Administrar Libros")
             print("2. Administrar Socios")
